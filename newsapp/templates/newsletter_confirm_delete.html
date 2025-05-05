@@ -1,0 +1,14 @@
+{% extends "main.html" %}
+{% block content %}
+<div class="newsletter-admin-panel">
+    <div class="newsletter-admin-card">
+      <a class="back-link" href="{% url 'NewsletterCreate' %}">&#8592; back</a>
+      <form action="" method="post">
+        {% csrf_token %}
+        <p class="delete-question">Czy na pewno chcesz usunąć newsletter: <strong>{{ Newsletter }}</strong>?</p>
+        <input class="delete-button" type="submit" value="Delete">
+      </form>
+    </div>
+  </div>
+  
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "main.html" %}
+{% block content %}
+
+<div class="newsletter-admin-panel">
+  <div class="newsletter-admin-card">
+    <form action="" method="POST">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <div class="newsletter-admin-actions">
+        <button type="submit" name="save_news">Zapisz jako stan roboczy</button>
+        <button type="submit" name="sent_news">Wyślij</button>
+      </div>
+    </form>
+    <div class="newsletter-admin-link">
+      <a href="{% url 'subscribe' %}">strona główna</a>
+    </div>
+  </div>
+
+  <div class="newsletter-admin-list">
+    <h2>Newslettery</h2>
+    {% for Newsletter in Newsletters %}
+      <div class="newsletter-admin-list-item">
+        <span class="newsletter-title">{{ Newsletter }}</span>
+        <a class="edit-link" href="{% url 'NewsLetterUpdate' Newsletter.pk %}">Edytuj</a>
+        <a class="delete-link" href="{% url 'NewsLetterDelete' Newsletter.pk %}">&#215;</a>
+      </div>
+    {% empty %}
+      <p>Brak newsletterów.</p>
+    {% endfor %}
+  </div>
+</div>
+
+
+{% endblock %}

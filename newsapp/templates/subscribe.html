@@ -1,0 +1,58 @@
+
+{% extends "main.html" %}
+{% block content %}
+
+<div class="homepage-main">
+    <div class="main-card">
+      <!-- cała zawartość strony głównej -->
+      {% if user.is_authenticated %}
+          <h2>heelo {{ user }}</h2>
+      {% else %}
+          <form action="{% url 'subscribe' %}" method="POST">
+              {% csrf_token %}
+              <h2>Zarejestruj się w naszym newsletterze!</h2>
+              {{ form.as_p }}
+              <button type="submit" name="sent_sub">Subscribe</button>
+          </form>
+          {{ form.email.errors }}
+      {% endif %}
+  
+      {% if user.is_authenticated %}
+          <h2>Change subscription state</h2>
+          <form action="{% url 'subscribe' %}" method="POST">
+              {% csrf_token %}
+              {{ active_form.as_p }}
+              {{ subscriber.Active_sub }}
+              <button type="submit" name="actdis_sub">Change subscription state</button>
+          </form>
+      {% endif %}
+  
+      <div class="homepage-links">
+        {% if user.is_authenticated %}
+            <h2 class="Llink"><a href="{% url "CustomLogoutView" %}">Wyloguj się</a></h2>
+        {% else %}
+            <h2 class="Llink"><a href="{% url "CustomLoginView" %}">Zaloguj się</a></h2>
+            <h2 class="Llink"><a href="{% url "RegisterPage" %}">Zarejestruj</a></h2>
+        {% endif %}
+      </div>
+  
+      <div class="newsletter-list">
+        {% if request.user.is_authenticated %}
+          <ul>
+            <h2>Starsze newslettery:</h2>
+              {% for newsletter in newsletters %}
+                  <li>
+                      <a href="{% url "newsletter-detail" newsletter.pk %}">{{newsletter.subject}}</a>
+                  </li>
+              {% endfor %}
+          </ul>
+        {% else %}
+          <p>Zarejestruj się, aby przejrzeć starsze newslettery</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  
+
+
+{% endblock %}

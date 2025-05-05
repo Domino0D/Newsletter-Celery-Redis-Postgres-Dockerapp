@@ -1,0 +1,34 @@
+{% extends "main.html" %}
+{% block content %}
+
+<div class="newsletter-preview-page">
+    <div class="newsletter-card">
+      <div class="newsletter-header">
+        <p class="newsletter-date">{{ object.created_date|date:"d M Y" }}</p>
+        <h1 class="newsletter-subject">{{ newsletter.subject }}</h1>
+      </div>
+      <div class="newsletter-content">
+        <p>{{ newsletter.content }}</p>
+      </div>
+      <form method="POST" class="send-form">
+        {% csrf_token %}
+        {{ send_form.as_p }}
+        <button type="submit">Wyślij do mnie</button>
+
+      </form>
+            {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+      <div class="back-link">
+        <a href="{% url "subscribe" %}">wróć</a>
+      </div>
+    </div>
+  </div>
+  
+
+
+{% endblock %}

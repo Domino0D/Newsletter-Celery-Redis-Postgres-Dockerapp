@@ -1,0 +1,12 @@
+{% extends "main.html" %}
+{% block content %}
+
+<div class="confirm-page">
+    <div class="confirm-card">
+      <h1>Subskrypcja aktywna!</h1>
+      <p>Twoja subskrypcja jest aktywna. <a href="{% url 'subscribe' %}">Przejdź do strony głównej.</a></p><br/>
+      <p>Zaloguj się, aby wypisać się z newslettera.</p>
+    </div>
+  </div>
+
+{% endblock %}

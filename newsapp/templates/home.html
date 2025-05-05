@@ -1,0 +1,33 @@
+
+{% extends "main.html" %}
+{% block content %}
+
+<container>
+    heqweelo {{ user }}
+    <box>
+        <h2>Signup to newsletter</h2>
+        <div class="headers">
+            <div class="srchform">
+                <form action="{% url 'subscribe' %}" method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit">Subscribe</button>
+                  </form>
+            </div>
+        </div>
+        <h2>Zarządzaj subskrypcją newslettera</h2>
+        <form method="POST">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+        </form>
+    </box>
+    <box>
+        <div>
+            <h2><a href=" {% url "CustomLoginView" %} ">Login</a></h2>
+            <h2>or Signup</h2>
+        </div>
+    </box>
+</container>
+
+{% endblock %}

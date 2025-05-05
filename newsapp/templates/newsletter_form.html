@@ -1,0 +1,25 @@
+{% extends "main.html" %}
+{% block content %}
+
+<div class="newsletter-admin-panel">
+    <div class="newsletter-admin-card">
+      {% comment %} Submitting data to the NewsLetterUpdate view with the current newsletter's primary key {% endcomment %}
+      <form method="POST" action="{% url 'NewsLetterUpdate' object.pk %}"> 
+        {% csrf_token %} 
+        {{ form.as_p }}
+        <div class="newsletter-admin-actions">
+          {% comment %} Save and send button {% endcomment %}
+          <input type="submit" name="save_news" value="Zapisz">
+          <button type="submit" name="sent_news">Wyślij</button>
+        </div>
+        {% comment %} Display the creation date of newsletter {% endcomment %}
+        <h3>Data utworzenia: {{ object.created_date|date:"d M Y" }}</h3>
+      </form>
+      <div class="newsletter-admin-link">
+        <a href="{% url 'NewsletterCreate' %}">strona admina</a>
+      </div>
+    </div>
+  </div>
+  
+
+{% endblock %}
