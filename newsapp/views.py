@@ -81,7 +81,7 @@ class ConfirmEmailView(View):
         
         login(request, user) #log the user in
         
-        Subscriber.objects.get_or_create(email=user.email, defaults={'is_confirmed': True, 'user':user})# create or update a Subscriber object for this user/email
+        Subscriber.objects.update_or_create(email=user.email, defaults={'is_confirmed': True, 'user':user})# create or update a Subscriber object for this user/email
         
         if confirmation.is_confirmed: 
             return render(request, 'confirm_email.html', {'message': 'Email został potwierdzony', 'go_home': True}) #if confirmation succeeded
