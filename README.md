@@ -33,7 +33,7 @@ A web application built with Django that allows users to register, confirm their
 
 ## 🖥️ Demo
 
-*Demo coming soon!*
+https://dominoo.pythonanywhere.com/ (for non-admin users only!)
 
 ---
 
