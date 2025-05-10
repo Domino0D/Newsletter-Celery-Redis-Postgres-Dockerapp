@@ -52,26 +52,28 @@ A web application built with Django that allows users to register, confirm their
 ---
 
 ## 📁 Project Structure
-``
+
+```plaintext
 Django-Newsletter-APP/
 ├── manage.py
 ├── requirements.txt
 ├── .env.example
 ├── newsletterpr/
-│ ├── settings.py
-│ ├── urls.py
-│ └── ...
+│   ├── settings.py
+│   ├── urls.py
+│   └── ...
 └── newsapp/
-├── models.py
-├── views.py
-├── forms.py
-├── templates/
-│ ├── admin.html
-│ ├── register.html
-│ ├── confirm_email.html
-│ └── ...
-└── ...
-``
+    ├── models.py
+    ├── views.py
+    ├── forms.py
+    ├── templates/
+    │   ├── admin.html
+    │   ├── register.html
+    │   ├── confirm_email.html
+    │   └── ...
+    └── ...
+```
+
 text
 
 ---
