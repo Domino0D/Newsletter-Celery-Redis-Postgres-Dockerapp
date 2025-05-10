@@ -15,7 +15,7 @@ A web application built with Django that allows users to register, confirm their
 - [Usage](#usage)
 - [Screenshots](#screenshots)
 - [Security Notes](#security-notes)
-
+- [GoogleRecaptcha Integration](#Google-reCAPTCHA-Integration)
 
 ---
 
@@ -144,7 +144,7 @@ text
 
 ---
 
-##🛡️ Google reCAPTCHA Integration
+## 🛡️ Google reCAPTCHA Integration
 Protect your forms from bots using Google reCAPTCHA.
 
 Register and Get Keys
@@ -168,8 +168,9 @@ Add to your .env file:
 ```
 RECAPTCHA_PUBLIC_KEY=your_site_key
 RECAPTCHA_PRIVATE_KEY=your_secret_key
-And load them in settings.py:
 ```
+And load them in settings.py:
+
 
 ```
 import os
