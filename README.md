@@ -144,10 +144,13 @@ text
 
 ---
 
-🛡️ Google reCAPTCHA Integration
+## 🛡️ Google reCAPTCHA Integration
 Protect your forms from bots using Google reCAPTCHA.
 
-Register and Get Keys
+### Register and Get Keys
+
+text
+
 Go to Google reCAPTCHA Admin Console
 
 Choose reCAPTCHA v2 ("I'm not a robot" Checkbox)
@@ -167,18 +170,25 @@ Configure Keys
 Add to your .env file:
 
 text
+
 RECAPTCHA_PUBLIC_KEY=your_site_key
 RECAPTCHA_PRIVATE_KEY=your_secret_key
 And load them in settings.py:
 
-python
+### settings.py
+
+text
+
 import os
 RECAPTCHA_PUBLIC_KEY = os.getenv('RECAPTCHA_PUBLIC_KEY')
 RECAPTCHA_PRIVATE_KEY = os.getenv('RECAPTCHA_PRIVATE_KEY')
 Use in Forms
 In your forms.py:
 
-python
+### forms.py
+
+text 
+
 from django_recaptcha.fields import ReCaptchaField
 
 class RegisterForm(forms.Form):
@@ -188,6 +198,11 @@ Render in Template
 In your template (e.g. register.html):
 
 text
+
+### template.html
+
+html 
+
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
@@ -195,7 +210,10 @@ text
 </form>
 The reCAPTCHA widget will appear automatically.
 
-Tips
+###Tips
+
+text
+
 For local testing, add localhost and 127.0.0.1 as allowed domains in Google reCAPTCHA settings.
 
 Never commit your real keys to the repository – use your .env file!
@@ -205,7 +223,6 @@ If you get validation errors, check your keys and domain settings.
 More Info
 django-recaptcha documentation
 
-Po wklejeniu na GitHubie nagłówki będą widoczne jako sekcje, a całość będzie czytelna i zgodna z resztą README!
 ## 🎮 Usage
 
 ### For Users
