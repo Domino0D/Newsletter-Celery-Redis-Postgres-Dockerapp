@@ -144,6 +144,68 @@ text
 
 ---
 
+🛡️ Google reCAPTCHA Integration
+Protect your forms from bots using Google reCAPTCHA.
+
+Register and Get Keys
+Go to Google reCAPTCHA Admin Console
+
+Choose reCAPTCHA v2 ("I'm not a robot" Checkbox)
+
+Add your domains (e.g., localhost, yourapp.pythonanywhere.com)
+
+Copy your Site Key and Secret Key
+
+Install Django reCAPTCHA
+bash
+pip install django-recaptcha
+Add to your INSTALLED_APPS in settings.py:
+
+python
+'django_recaptcha',
+Configure Keys
+Add to your .env file:
+
+text
+RECAPTCHA_PUBLIC_KEY=your_site_key
+RECAPTCHA_PRIVATE_KEY=your_secret_key
+And load them in settings.py:
+
+python
+import os
+RECAPTCHA_PUBLIC_KEY = os.getenv('RECAPTCHA_PUBLIC_KEY')
+RECAPTCHA_PRIVATE_KEY = os.getenv('RECAPTCHA_PRIVATE_KEY')
+Use in Forms
+In your forms.py:
+
+python
+from django_recaptcha.fields import ReCaptchaField
+
+class RegisterForm(forms.Form):
+    # ... your fields ...
+    captcha = ReCaptchaField()
+Render in Template
+In your template (e.g. register.html):
+
+text
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Register</button>
+</form>
+The reCAPTCHA widget will appear automatically.
+
+Tips
+For local testing, add localhost and 127.0.0.1 as allowed domains in Google reCAPTCHA settings.
+
+Never commit your real keys to the repository – use your .env file!
+
+If you get validation errors, check your keys and domain settings.
+
+More Info
+django-recaptcha documentation
+
+Po wklejeniu na GitHubie nagłówki będą widoczne jako sekcje, a całość będzie czytelna i zgodna z resztą README!
 ## 🎮 Usage
 
 ### For Users
@@ -156,12 +218,6 @@ text
 - Log in to `/admin/` using your superuser credentials
 - Create and send newsletters from the admin panel
 - Manage subscribers and view their status
-
----
-
-## 🖼️ Screenshots
-
-*Add your screenshots here!*
 
 ---
 
