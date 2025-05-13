@@ -184,13 +184,14 @@ class NewsletterCreate(LoginRequiredMixin, UserPassesTestMixin, CreateView): # V
             newsletter = form.save() # save newsletter
             
             # Send the newsletter via email to all subscribers
-            send_mail( 
+            send_email = EmailMessage( 
                 newsletter.subject, # subject
                 newsletter.content, # content
                 settings.EMAIL_HOST_USER, # Sender's email address
-                emails, # list of recipient email addresses
-                fail_silently=False,
+                bcc=emails, # list of recipient email addresses
             )
+            
+            send_email.send()
         else:
             raise Http404('Coś poszło nie tak podczas wysyłania lub zapisywania newslettera') # If neither button was clicked, raise a 404 error
         
@@ -225,13 +226,14 @@ class NewsLetterUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView): #  
             
             # Send the newsletter via email to all subscribers 
             
-            send_mail(
+            send_email = EmailMessage(
                 newsletter.subject, # subject 
                 newsletter.content, # content
                 settings.EMAIL_HOST_USER, # Sender's email address 
-                emails, # List of recipient 
-                fail_silently=False,
+                bcc=emails, # List of recipient 
             )
+            
+            send_email.send()
         else: # If neither button was clicked, raise a 404 error
             raise Http404('Coś poszło nie tak podczas wysyłania lub zapisywania newslettera')
         return super().form_valid(form)
