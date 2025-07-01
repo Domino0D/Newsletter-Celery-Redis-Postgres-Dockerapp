@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 from urllib.parse import urlparse
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 
 load_dotenv() 
 
@@ -21,7 +21,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG') == 'True'
 
 EMAIL_HOST = os.getenv('EMAIL_HOST')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT'))
+EMAIL_PORT = int(os.getenv('EMAIL_PORT')) # type: ignore
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS') == 'True'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
@@ -98,17 +98,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'newsletterpr',
+        'USER': 'newsletterpr',
+        'PASSWORD': 'newsletterpr123',
+        'HOST': 'db',
+        'PORT': '5432',
     }
 }
-
 # EMAIL_HOST = 'smtp.gmail.com'
 # EMAIL_HOST_USER = '' #your email
 # EMAIL_HOST_PASSWORD = '' # your email host password
 # EMAIL_PORT = 587
 # EMAIL_USE_TLS = True
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
 
 
 
@@ -160,3 +164,14 @@ STATIC_URL = '/static/'
 
 # RECAPTCHA_PUBLIC_KEY = ''
 # RECAPTCHA_PRIVATE_KEY = ''
+
+import os #import ustawien pythona
+
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0') # adres brokera/pośrednika, przechowującego zadania do wykonania (tu redis)
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0') # tak jak wyżej, tylko przechowuje wyniki
+
+# CELERY_ACCEPT_CONTENT = ['json'] # format akceptowanych danych kto dostaje
+# CELERY_TASK_SERIALIZER = 'json' # dane wysyłane do brokera. te 2 wpisy są opcjonalne
+
+CELERY_IMPORTS = ('newsapp.tasks',)
+

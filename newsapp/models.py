@@ -57,5 +57,8 @@ class EmailConfirmation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)# Date when confirmation link was created
     is_confirmed = models.BooleanField(default=False) #by default, not confirmed
     
+    profitability = models.FloatField(default=0.0)
+    internet_page = models.URLField(blank=True, default='')
+    
     def is_expired(self):
         return timezone.now() > self.created_at + timedelta(days=6)  # 1 day working

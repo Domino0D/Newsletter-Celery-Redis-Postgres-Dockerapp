@@ -1,0 +1,41 @@
+
+services: # wszystkie serwisy
+  db:
+    image: postgres
+    environment:
+         POSTGRES_DB: newsletterpr
+         POSTGRES_USER: newsletterpr
+         POSTGRES_PASSWORD: newsletterpr123
+    ports:
+      - "5432:5432" #port
+  web: #strona
+    build: . #buildujemy wszystkie
+    # command: gunicorn django_celery.wsgi:application --bind 0.0.0.0:8001
+    command: python manage.py runserver 0.0.0.0:8001
+
+    volumes:
+      - .:/app # apka dockera
+    ports:
+      - "8001:8001" #port
+    depends_on:
+      - db
+      - redis #korzystamy jeszcze z redisa
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0 
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0 
+
+  redis: 
+    image: redis:7-alpine # domyślny image redisa dla naszej wersji
+    ports:
+      - "6379:6379" #domyślne porty
+
+  celery:
+    build: . # budujemy wszystko
+    command: celery -A newsletterpr worker --loglevel=info --pool=solo # odpalamy workera
+    volumes:
+      - .:/app # apka dockera
+    depends_on:
+      - redis # korzystamy z redisa
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0 
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0

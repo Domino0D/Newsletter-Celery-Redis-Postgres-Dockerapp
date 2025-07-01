@@ -1,6 +1,9 @@
 from django.shortcuts import render, get_object_or_404
 from django.views import View
 
+from time import sleep
+
+
 from django.contrib.auth.views import LoginView
 
 from django.urls import reverse_lazy, reverse
@@ -13,10 +16,15 @@ from django.shortcuts import redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
+from django.core import serializers
+
+
+from .tasks import send_feedback_email, send_newsletter_email, newsletter_sending_global, activate_link_email, activate_link_account
+
 
 from django.conf import settings
-from .forms import SubscriptionForm, NewsletterForm, ActiveSubscriptionForm, SendMailToMe
+from .forms import SubscriptionForm, NewsletterForm, ActiveSubscriptionForm, SendMailToMe, FeedbackForm
 from .models import Subscriber, Newsletter, CustomUserCreationForm, EmailConfirmation, UserSubmission
 from django.http import Http404, HttpResponse
 
@@ -51,14 +59,23 @@ class RegisterPage(FormView): #Custom registration page
         confirmation_link = self.request.build_absolute_uri( 
             reverse('confirm_email', args=[str(confirmation.token)])
         ) # build a unique confirmation link using the UUID token
-                
-        send_mail(
-                'Potwierdź swój adres email', #subject
-                f'Kliknij w link, aby potwierdzić rejestrację: {confirmation_link}', #content with link
-                settings.DEFAULT_FROM_EMAIL, #email settings from settings.py
-                [user.email], #registering user email
-                fail_silently=False, 
-            )
+        
+        activate_link_account.delay(
+            confirmation_link,
+            user.email,
+        )
+        
+        # activate_link_email.delay(
+        #     confirmation_link,
+        #     subscriber.email,
+        # )
+        # send_mail(
+        #         'Potwierdź swój adres email', #subject
+        #         f'Kliknij w link, aby potwierdzić rejestrację: {confirmation_link}', #content with link
+        #         settings.DEFAULT_FROM_EMAIL, #email settings from settings.py
+        #         [user.email], #registering user email
+        #         fail_silently=False, 
+        #     )
         return render(self.request, 'registration_pending.html') 
         
     def get(self, *args, **kwargs):
@@ -81,7 +98,7 @@ class ConfirmEmailView(View):
         
         login(request, user) #log the user in
         
-        Subscriber.objects.get_or_create(email=user.email, defaults={'is_confirmed': True, 'user':user})# create or update a Subscriber object for this user/email
+        Subscriber.objects.update_or_create(email=user.email, defaults={'is_confirmed': True, 'user':user})# create or update a Subscriber object for this user/email
         
         if confirmation.is_confirmed: 
             return render(request, 'confirm_email.html', {'message': 'Email został potwierdzony', 'go_home': True}) #if confirmation succeeded
@@ -122,13 +139,12 @@ class SubscribeView(View):
                     subscriber.save() #save
                     confirmation_link = request.build_absolute_uri(reverse(confirm, args=[subscriber.confirmation_token])) #creating confirmation link subscriber =confirmation _token
                     
-                    send_mail(
-                        'Potwierdź subskrypcję', #subject
-                        f'kliknij link, aby potwierdzić: {confirmation_link}', #content with confirm link
-                        settings.EMAIL_HOST_USER,
-                        [subscriber.email], # new subscriber email
-                        fail_silently=False
+                    activate_link_email.delay(
+                        confirmation_link,
+                        subscriber.email,
                     )
+                    
+                    
                 return redirect('subscription_sent') #return to info site 
             return render(request, 'subscribe.html', {'form':form, 'newsletters':newsletters, 'active_form': active_form})
         elif 'actdis_sub' in request.POST: # if changing active state 
@@ -175,7 +191,7 @@ class NewsletterCreate(LoginRequiredMixin, UserPassesTestMixin, CreateView): # V
         
         if "save_news" in self.request.POST: # If the save button was clicked, set the current user as the author and save the newsletter 
             form.instance.user = self.request.user 
-            newsletter = form.save() 
+            newsletter = form.save()            
         
         elif "sent_news" in self.request.POST: # If the send button was clicked, send the newsletter to all active and confirmed subscribers
             subscribers = Subscriber.objects.filter(is_confirmed=True, Active_sub = True) # 
@@ -183,14 +199,21 @@ class NewsletterCreate(LoginRequiredMixin, UserPassesTestMixin, CreateView): # V
             form.instance.sent = True # Mark the newsletter as sent
             newsletter = form.save() # save newsletter
             
+            subject = newsletter.subject
+            content = newsletter.content
+            
+            newsletter_sending_global.delay(subject, content)
+            
             # Send the newsletter via email to all subscribers
-            send_mail( 
-                newsletter.subject, # subject
-                newsletter.content, # content
-                settings.EMAIL_HOST_USER, # Sender's email address
-                emails, # list of recipient email addresses
-                fail_silently=False,
-            )
+            # send_email = EmailMessage( 
+            #     newsletter.subject, # subject
+            #     newsletter.content, # content
+            #     settings.EMAIL_HOST_USER, # Sender's email address
+            #     bcc=emails, # list of recipient email addresses
+            # )
+            
+            #send_email.send()
+            
         else:
             raise Http404('Coś poszło nie tak podczas wysyłania lub zapisywania newslettera') # If neither button was clicked, raise a 404 error
         
@@ -225,13 +248,15 @@ class NewsLetterUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView): #  
             
             # Send the newsletter via email to all subscribers 
             
-            send_mail(
+            send_email = EmailMessage(
                 newsletter.subject, # subject 
                 newsletter.content, # content
                 settings.EMAIL_HOST_USER, # Sender's email address 
-                emails, # List of recipient 
-                fail_silently=False,
+                bcc=emails, # List of recipient 
             )
+            
+            send_email.send()
+            
         else: # If neither button was clicked, raise a 404 error
             raise Http404('Coś poszło nie tak podczas wysyłania lub zapisywania newslettera')
         return super().form_valid(form)
@@ -250,72 +275,62 @@ class NewsLetterDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView): # s
         raise Http404('Site not found') # Raise the 404 error if the user is not a superuser
     
     
-class NewsletterDetailView(UserPassesTestMixin, LoginRequiredMixin, DetailView): # View for displaying newsletter details and allowing the user to send the newsletter to themselves via email. Only accessible to authenticated users.
+class NewsletterDetailView(UserPassesTestMixin, LoginRequiredMixin, DetailView):
+    model = Newsletter
+    template_name = 'newsletter_detail.html'
+    context_object_name = 'newsletter'
 
-    model = Newsletter  # The model for the newsletter
-    template_name = 'newsletter_detail.html'  # Template for rendering the detail view
-    context_object_name = 'newsletter'  # Context variable name for the newsletter object
-    
-    def test_func(self): # Allow access only to authenticated users.
+    def test_func(self):
         return self.request.user.is_authenticated
-    
 
-    def handle_no_permission(self): # Raise a 404 error if the user is not authenticated.
-        raise Http404('Musisz sie zalogować aby widzieć te stronę')
-    
-    def get_context_data(self, **kwargs): # Add the email sending form to the context.
+    def handle_no_permission(self):
+        raise Http404('Musisz się zalogować aby widzieć tę stronę')
+
+    def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['send_form'] = SendMailToMe()  # Add an empty form for sending the newsletter
+        context['send_form'] = SendMailToMe()
         return context
-    
-    def post(self, request, *args, **kwargs): # Handle the form submission for sending the newsletter to the user's email. Enforce a limit: one submission per user per newsletter every 24 hours.
-        newsletter = self.get_object()  # Get the current newsletter object
-        form = SendMailToMe(request.POST)  # Bind the form with POST data
-        
-        # Calculate the time threshold for limiting submissions (26 hours for margin)
-        one_hour_ago = timezone.now() - timedelta(hours=26)
-        # Check if the user has already submitted this newsletter in the last 26 hours
+
+    def post(self, request, *args, **kwargs):
+        newsletter = self.get_object()
+        form = SendMailToMe(request.POST)
+        one_day_ago = timezone.now() - timedelta(hours=24)
+
         recent_submission = UserSubmission.objects.filter(
             user=request.user,
-            newsletter=self.get_object(),
-            timestamp__gte=one_hour_ago
+            newsletter=newsletter,
+            timestamp__gte=one_day_ago
         ).exists()
 
         if recent_submission:
-            # Add a non-field error to inform the user about the submission limit 
-            form.add_error(None, 'Nasze serwery są biedne, więc jeden newsletter możesz wysłać do siebie raz na 24h :(')
+            messages.error(request, "Możesz wysłać ten newsletter do siebie tylko raz na 24 godziny.")
+            return redirect('newsletter-detail', pk=newsletter.pk)
 
         if form.is_valid():
-            try:
-                # Attempt to send the newsletter email to the user
-                send_mail(
-                    newsletter.subject,  # Email subject
-                    newsletter.content,  # Email body
-                    settings.EMAIL_HOST_USER,  # Sender's email address (from settings)
-                    [request.user.email],  # Recipient (current user's email)
-                    fail_silently=False
-                )
-                
-                # Log the submission to enforce the sending limit
-                UserSubmission.objects.create(
-                    user=request.user,
-                    newsletter=self.get_object()
-                )
-                # Add a success message for the user 
-                messages.success(request, "Wiadomość została wysłana! Sprawdź folder spam.")
-                # Redirect to the same newsletter detail page
-                return redirect('newsletter-detail', pk=newsletter.pk)
-            except Exception as e:
-                # If sending fails, add an error to the form and re-render the page 
-                form.add_error(None, 'Nie udalo sie wyslac maila')
-                return render(request, self.template_name, {'send_form': form, 'newsletter': newsletter})
+            # Wywołanie zadania Celery asynchronicznie
+            send_newsletter_email.delay(newsletter.pk, request.user.email)
+
+            # Zapisujemy informację o wysłaniu
+            UserSubmission.objects.create(user=request.user, newsletter=newsletter)
+
+            messages.success(request, "Wiadomość została wysłana! Sprawdź folder spam.")
+            return redirect('newsletter-detail', pk=newsletter.pk)
         else:
-            # If the form is invalid, re-render the page with the form and newsletter
             return render(request, self.template_name, {'send_form': form, 'newsletter': newsletter})
 
-
+class FeedbackFormView(FormView):
+    template_name = "feedback.html"
+    form_class = FeedbackForm
+    success_url = '/feedback/'
+    
+    def form_valid(self, form):
+        send_feedback_email.delay(
+            email=form.cleaned_data['email'],
+            message=form.cleaned_data['message']
+        )
         
-
+        return super().form_valid(form)
+            
 
     
     

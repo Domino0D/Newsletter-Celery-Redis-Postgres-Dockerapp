@@ -2,7 +2,7 @@
 from django import forms # importing django forms
 from django.contrib.auth.forms import UserCreationForm  #UserCreation form method 
 from .models import Subscriber, Newsletter #importing models
-from django_recaptcha.fields import ReCaptchaField #importing google captcha
+from django_recaptcha.fields import ReCaptchaField # type: ignore #importing google captcha
 
 class SubscriptionForm(forms.ModelForm): # subscription form 
     captcha = ReCaptchaField() #adding google captcha
@@ -31,4 +31,9 @@ class NewsletterForm(forms.ModelForm): # standard django ModelForm
 class SendMailToMe(forms.Form):
     captcha = ReCaptchaField()
     
-        
+
+class FeedbackForm(forms.Form):
+    email = forms.EmailField(label="Email Address")
+    message = forms.CharField(
+        label="Message", widget=forms.Textarea(attrs={"rows": 5})
+    )

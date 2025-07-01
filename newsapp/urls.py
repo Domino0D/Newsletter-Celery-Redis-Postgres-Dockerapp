@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import RegisterPage, CustomLoginView, CustomLogoutView, NewsletterCreate, NewsLetterUpdate, NewsLetterDelete, ConfirmEmailView, NewsletterDetailView, SubscribeView
+from .views import RegisterPage, CustomLoginView, CustomLogoutView, NewsletterCreate, NewsLetterUpdate, NewsLetterDelete, ConfirmEmailView, NewsletterDetailView, SubscribeView, FeedbackFormView
 from . import views
 
 
@@ -26,4 +26,7 @@ urlpatterns = [
     
     path('', SubscribeView.as_view(), name='subscribe'),
     path('confirm/<uuid:token>/', views.confirm,name='Confirmation'),
+    
+    path('feedback/', FeedbackFormView.as_view(),name='feedback-view'),
+    
 ]

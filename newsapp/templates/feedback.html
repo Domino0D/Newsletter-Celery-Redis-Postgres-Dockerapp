@@ -1,0 +1,15 @@
+{% extends 'main.html' %}
+
+{% block content %}
+
+    <h1>How are we doing? you don't know?</h1>
+    
+    <p>Please send us your feedback.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit"/>
+    </form>
+
+{% endblock content %}
