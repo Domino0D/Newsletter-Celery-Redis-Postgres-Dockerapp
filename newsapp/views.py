@@ -20,7 +20,7 @@ from django.core.mail import send_mail, EmailMessage
 from django.core import serializers
 
 
-from .tasks import send_feedback_email, send_newsletter_email, newsletter_sending_global, activate_link_email, activate_link_account
+from .tasks import send_feedback_email, send_newsletter_email, newsletter_sending_global, activate_link_email, activate_link_account # tasks import 
 
 
 from django.conf import settings
@@ -60,16 +60,14 @@ class RegisterPage(FormView): #Custom registration page
             reverse('confirm_email', args=[str(confirmation.token)])
         ) # build a unique confirmation link using the UUID token
         
-        activate_link_account.delay(
+        activate_link_account.delay( # sending information to task by task name
             confirmation_link,
             user.email,
         )
         
-        # activate_link_email.delay(
-        #     confirmation_link,
-        #     subscriber.email,
-        # )
-        # send_mail(
+        
+        """Version before celery add"""
+        # send_mail( """"
         #         'Potwierdź swój adres email', #subject
         #         f'Kliknij w link, aby potwierdzić rejestrację: {confirmation_link}', #content with link
         #         settings.DEFAULT_FROM_EMAIL, #email settings from settings.py
@@ -139,7 +137,7 @@ class SubscribeView(View):
                     subscriber.save() #save
                     confirmation_link = request.build_absolute_uri(reverse(confirm, args=[subscriber.confirmation_token])) #creating confirmation link subscriber =confirmation _token
                     
-                    activate_link_email.delay(
+                    activate_link_email.delay( # sending information to task by task name
                         confirmation_link,
                         subscriber.email,
                     )
@@ -202,9 +200,9 @@ class NewsletterCreate(LoginRequiredMixin, UserPassesTestMixin, CreateView): # V
             subject = newsletter.subject
             content = newsletter.content
             
-            newsletter_sending_global.delay(subject, content)
+            newsletter_sending_global.delay(subject, content) # sending information to task by task name
             
-            # Send the newsletter via email to all subscribers
+            # Send the newsletter via email to all subscribers : first version, before celery add
             # send_email = EmailMessage( 
             #     newsletter.subject, # subject
             #     newsletter.content, # content
@@ -248,7 +246,7 @@ class NewsLetterUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView): #  
             
             # Send the newsletter via email to all subscribers 
             
-            send_email = EmailMessage(
+            send_email = EmailMessage( # sending information to task by task name
                 newsletter.subject, # subject 
                 newsletter.content, # content
                 settings.EMAIL_HOST_USER, # Sender's email address 
@@ -307,10 +305,10 @@ class NewsletterDetailView(UserPassesTestMixin, LoginRequiredMixin, DetailView):
             return redirect('newsletter-detail', pk=newsletter.pk)
 
         if form.is_valid():
-            # Wywołanie zadania Celery asynchronicznie
-            send_newsletter_email.delay(newsletter.pk, request.user.email)
+            # Calling a celery task asynchronously
+            send_newsletter_email.delay(newsletter.pk, request.user.email) # sending information to task by task name - number of newsletter and user email
 
-            # Zapisujemy informację o wysłaniu
+            # Save information about submission
             UserSubmission.objects.create(user=request.user, newsletter=newsletter)
 
             messages.success(request, "Wiadomość została wysłana! Sprawdź folder spam.")
@@ -319,16 +317,18 @@ class NewsletterDetailView(UserPassesTestMixin, LoginRequiredMixin, DetailView):
             return render(request, self.template_name, {'send_form': form, 'newsletter': newsletter})
 
 class FeedbackFormView(FormView):
-    template_name = "feedback.html"
-    form_class = FeedbackForm
-    success_url = '/feedback/'
+    template_name = "feedback.html"  # specify the template to render the feedback form
+    form_class = FeedbackForm  # the form class used to validate and process user input
+    success_url = '/feedback/'  # URL to redirect to after successful form submission
     
     def form_valid(self, form):
-        send_feedback_email.delay(
-            email=form.cleaned_data['email'],
-            message=form.cleaned_data['message']
+        # When the form is valid, send the feedback email asynchronously using Celery
+        send_feedback_email.delay( # give data to tasks.py using task name
+            email=form.cleaned_data['email'],  # get cleaned email from form data
+            message=form.cleaned_data['message']  # get cleaned message from form data
         )
         
+        # Call the parent class's form_valid to handle the normal success flow (redirect)
         return super().form_valid(form)
             
 
