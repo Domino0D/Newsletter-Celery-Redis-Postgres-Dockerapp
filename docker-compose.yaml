@@ -10,8 +10,8 @@ services: # wszystkie serwisy
       - "5432:5432" #port
   web: #strona
     build: . #buildujemy wszystkie
-    # command: gunicorn django_celery.wsgi:application --bind 0.0.0.0:8001
-    command: python manage.py runserver 0.0.0.0:8001
+    # command: gunicorn django_celery.wsgi:application --bind 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:8000
 
     volumes:
       - .:/app # apka dockera
