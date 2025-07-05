@@ -16,7 +16,7 @@ services: # wszystkie serwisy
     volumes:
       - .:/app # apka dockera
     ports:
-      - "8001:8001" #port
+      - "8000:8000" #port
     depends_on:
       - db
       - redis #korzystamy jeszcze z redisa
